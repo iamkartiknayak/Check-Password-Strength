@@ -2,9 +2,10 @@ from getpass import getpass
 import requests
 import hashlib
 import sys
+from termcolor import colored
 
 
-def requestAPIData(query_char):
+def request_api_data(query_char):
     # query_char is the first 5 char from converted sha1
     url = f"https://api.pwnedpasswords.com/range/{query_char}"
 
@@ -16,7 +17,7 @@ def requestAPIData(query_char):
     return response
 
 
-def getPasswordLeakCount(hashes, hash_to_check):
+def get_password_leak_count(hashes, hash_to_check):
     # Converting response to text and split w.r.t each line
     hashes = [line.split(':') for line in hashes.text.splitlines()]
     for h, count in hashes:
@@ -25,32 +26,30 @@ def getPasswordLeakCount(hashes, hash_to_check):
     return 0
 
 
-def pwnedAPICheck(password):
+def pwned_api_check(password):
     # Converting password to sha1 hashes
-    sha1Password = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
+    sha1_password = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
 
     # Extracting first 5 and the rest char from converted hash
-    first5_char, tail = sha1Password[:5], sha1Password[5:]
+    first5_char, tail = sha1_password[:5], sha1_password[5:]
 
     # Checking if first 5 char is a valid hash in DB via API
     # Returns gen-obj of sha1[5:] => <Response [200]> if valid else => <Response [400]>
-    response = requestAPIData(first5_char)
+    response = request_api_data(first5_char)
 
-    # getPasswordLeakCount returns count of how many times people have used similar password
-    return getPasswordLeakCount(response, tail)
+    # get_password_leak_count returns count of how many times people have used similar password
+    return get_password_leak_count(response, tail)
     ...
 
 
-def main(enteredPasswords):
-    for password in enteredPasswords:
-        count = pwnedAPICheck(password)
+def main(entered_passwords):
+    for password in entered_passwords:
+        count = pwned_api_check(password)
         if count:
-            print(
-                f"{password} was found {count} times... you should probably change your password")
+            print(colored(
+                f"{password} was found {count} times... \nYou should probably change your password!!\n", "red"))
         else:
-            print(f"{password} was NOT found. Carry on!")
-
-    sys.exit(0)
+            print(colored(f"{password} was NOT found. Carry on!\n",  "green"))
 
 
 if __name__ == "__main__":
