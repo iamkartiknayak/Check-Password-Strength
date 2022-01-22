@@ -5,6 +5,9 @@ import sys
 from termcolor import colored
 
 
+hide_password = False
+
+
 def request_api_data(query_char):
     # query_char is the first 5 char from converted sha1
     url = f"https://api.pwnedpasswords.com/range/{query_char}"
@@ -42,9 +45,24 @@ def pwned_api_check(password):
     ...
 
 
-def main(entered_passwords):
+def main():
+    global hide_password
+
+    if len(sys.argv) > 1:
+        entered_passwords = sys.argv[1:]
+
+    else:
+        password = getpass(prompt="Enter your password : ").split()
+        entered_passwords = password
+        hide_password = True
+
     for password in entered_passwords:
         count = pwned_api_check(password)
+
+        if hide_password:
+            pass_pattern = (len(password) - 3) * "*"
+            password = f"{password[:2]}{pass_pattern}{password[-1]}"
+
         if count:
             print(colored(
                 f"{password} was found {count} times... \nYou should probably change your password!!\n", "red"))
@@ -53,9 +71,4 @@ def main(entered_passwords):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        main(sys.argv[1:])
-
-    else:
-        password = getpass(prompt="Enter your password : ").split()
-        main(password)
+    main()
